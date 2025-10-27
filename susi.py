@@ -5,29 +5,35 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 # Token seguro via variável de ambiente
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# Dados dos usuários e agendamentos
 usuarios_dados = {}
 agendamentos_registrados = []
 etapas_agendamento = {}
 
+# Datas e horários disponíveis
 datas_disponiveis = {
     "27/10/2025": ["10h00", "11h00", "14h00"],
     "28/10/2025": ["09h00", "13h00", "15h00"],
     "29/10/2025": ["08h30", "10h30", "16h00"]
 }
 
+# Unidades disponíveis
 unidades_disponiveis = ["Zona Norte", "Zona Sul", "Zona Oeste"]
 
+# Menu interativo
 async def mostrar_menu(update: Update):
     teclado = [["/consulta", "/exames"], ["/resultado", "/especialista"], ["/unidades", "/ajuda"]]
     reply_markup = ReplyKeyboardMarkup(teclado, resize_keyboard=True)
-    await update.message.reply_text(" ", reply_markup=reply_markup)
+    await update.message.reply_text("Escolha uma opção:", reply_markup=reply_markup)
 
+# Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"Bem-vindo ao SUSi, {update.effective_user.first_name}. Para continuar, digite seu CPF usando o comando:\n"
         "/cpf 12345678900"
     )
 
+# Comando /cpf
 async def cpf(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         cpf_valor = context.args[0]
@@ -40,26 +46,27 @@ async def cpf(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except:
         await update.message.reply_text("Por favor, envie o CPF no formato: /cpf 12345678900")
 
+# Comando /ajuda
 async def ajuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Comandos disponíveis:\n"
         "/start – Inicia o bot\n"
         "/cpf – Registrar CPF\n"
-        "/ajuda – Mostrar esta mensagem\n"
-        "/consulta – Solicitar agendamento de consulta\n"
+        "/consulta – Agendar consulta\n"
         "/exames – Agendar exames\n"
         "/resultado – Ver resultado dos exames\n"
-        "/unidades – Informações sobre unidades SUS\n"
-        "/especialista – Encaminhamento para especialista\n"
-        "/menu – Mostrar botões interativos\n"
-        "/minhasconsultas – Ver suas consultas agendadas"
+        "/unidades – Informações sobre unidades\n"
+        "/especialista – Encaminhamento médico\n"
+        "/minhasconsultas – Ver suas consultas\n"
+        "/ajuda – Mostrar esta mensagem"
     )
     await mostrar_menu(update)
 
+# Comando /consulta
 async def consulta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     usuario_id = update.effective_user.id
     if usuario_id not in usuarios_dados or "nome" not in usuarios_dados[usuario_id]:
-        await update.message.reply_text("Você precisa informar seu CPF e nome antes de agendar uma consulta. Use /cpf 12345678900")
+        await update.message.reply_text("Você precisa informar seu CPF e nome antes de agendar. Use /cpf.")
         return
     if usuario_id in etapas_agendamento:
         await update.message.reply_text("Você já está em processo de agendamento. Continue escolhendo as opções.")
@@ -71,17 +78,40 @@ async def consulta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto += "Digite o número da unidade desejada."
     await update.message.reply_text(texto)
 
+# Comando /exames
 async def exames(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Para agendar exames, use o comando /consulta e siga as etapas.")
+    await mostrar_menu(update)
+
+# Comando /resultado
+async def resultado(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Vamos agendar seus exames.\n"
-        "Use o comando /consulta para iniciar o agendamento guiado."
+        "Resultado dos exames alterado. Encaminhando para consulta médica.\n"
+        "Após a consulta, será definido o tratamento ou encaminhamento para especialista."
     )
     await mostrar_menu(update)
 
+# Comando /unidades
+async def unidades(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Atendimento nas unidades SUS:\n"
+        "1. Solicitação\n2. Cadastro (se necessário)\n3. Atendimento"
+    )
+    await mostrar_menu(update)
+
+# Comando /especialista
+async def especialista(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Consulta médica realizada. Avaliando necessidade de especialista.\n"
+        "Encaminhamento será feito se necessário."
+    )
+    await mostrar_menu(update)
+
+# Comando /minhasconsultas
 async def minhasconsultas(update: Update, context: ContextTypes.DEFAULT_TYPE):
     usuario_id = update.effective_user.id
     if usuario_id not in usuarios_dados:
-        await update.message.reply_text("Você precisa informar seu CPF antes de consultar seus agendamentos. Use /cpf 12345678900")
+        await update.message.reply_text("Informe seu CPF antes de consultar agendamentos. Use /cpf.")
         return
     consultas = [c for c in agendamentos_registrados if c["usuario_id"] == usuario_id]
     if not consultas:
@@ -101,47 +131,18 @@ async def minhasconsultas(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(resposta)
     await mostrar_menu(update)
 
-async def resultado(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Resultado dos exames alterado. Encaminhando para consulta médica.\n"
-        "Após a consulta, será definido:\n"
-        "- Tratamento clínico\n"
-        "- Ou encaminhamento para serviço especializado\n"
-        "O processo continua até que o caso seja encerrado com alta médica."
-    )
-    await mostrar_menu(update)
-
-async def unidades(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Solicitação de atendimento nas unidades SUS:\n"
-        "1. Você solicita o atendimento\n"
-        "2. Se não tiver cadastro, será realizado na hora\n"
-        "3. Após isso, o atendimento será iniciado normalmente"
-    )
-    await mostrar_menu(update)
-
-async def especialista(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Consulta médica realizada. Avaliando necessidade de especialista.\n"
-        "Se necessário, será feito o encaminhamento para regulação e agendamento com especialista.\n"
-        "Caso não seja necessário, o atendimento será encerrado."
-    )
-    await mostrar_menu(update)
-
-async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await mostrar_menu(update)
-
+# Processamento de mensagens
 async def nlp_resposta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text.lower()
     usuario_id = update.effective_user.id
 
     if usuario_id not in etapas_agendamento and texto.strip() in ["ok", "obrigado", "valeu"]:
-        await update.message.reply_text("Fico à disposição. Se precisar, digite /menu para ver as opções.")
+        await update.message.reply_text("Fico à disposição. Digite /menu para ver as opções.")
         return
 
     if usuario_id in usuarios_dados and "nome" not in usuarios_dados[usuario_id]:
         if len(texto.strip().split()) < 2:
-            await update.message.reply_text("Por favor, informe seu nome completo (nome e sobrenome).")
+            await update.message.reply_text("Informe seu nome completo (nome e sobrenome).")
             return
         usuarios_dados[usuario_id]["nome"] = texto.strip().title()
         await update.message.reply_text(
@@ -188,4 +189,9 @@ async def nlp_resposta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(texto)
             return
 
-        elif etapa.get("etapa") == "data
+        elif etapa.get("etapa") == "data":
+            try:
+                escolha = int(texto.strip())
+                datas = list(datas_disponiveis.keys())
+                if 1 <= escolha <= len(datas):
+                    etapa["data"] = datas[escolha - 1
