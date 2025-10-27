@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: susi-bot
-    env: python
-    buildCommand: ""
-    startCommand: bash start.sh
-    envVars:
-      - key: BOT_TOKEN
-        value: 8205835585:AAEbtURw7RJGswhxTqS-UZte6-CG2oQIXfY
