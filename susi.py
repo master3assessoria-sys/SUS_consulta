@@ -193,4 +193,4 @@ async def nlp_resposta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             try:
                 escolha = int(texto.strip())
                 datas = list(datas_disponiveis.keys())
-                if 1
+                if 1:
