@@ -1,5 +1,5 @@
 # Inicialização do bot
-app = ApplicationBuilder().token("8205835585:AAEbtURw7RJGswhxTqS-UZte6-CG2oQIXfY").build()
+
 
 # Comandos
 app.add_handler(CommandHandler("start", start))
