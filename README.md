@@ -1,2 +1,2 @@
-# SUS_consulta
+# SUSi_consulta
 Bot em desenvolvimento
