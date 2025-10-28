@@ -239,6 +239,6 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("minhasconsultas", minhasconsultas))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, nlp_resposta))
 
-   import sys
-print("Bot está funcionando", flush=True)
+    import sys
+    print("Bot está funcionando", flush=True)
     app.run_polling()
