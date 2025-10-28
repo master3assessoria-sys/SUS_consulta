@@ -163,22 +163,24 @@ async def nlp_resposta(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text("Digite apenas o número da unidade desejada.")
                 return
 
-        elif etapa.get("etapa") == "libras":
-            if texto.strip() == "1":
-                etapa["libras"] = "Sim"
-            elif texto.strip() == "2":
-                etapa["libras"] = "Não"
-            else:
-                await update.message.reply_text("Escolha 1 para Sim ou 2 para Não.")
-                return
-            etapa["etapa"] = "data"
-            datas = list(datas_disponiveis.keys())
-            texto = "Escolha uma data disponível para sua consulta:\n"
-            for i, d in enumerate(datas):
-                texto += f"{i+1}. {d}\n"
-            texto += "Digite o número da data desejada."
-            await update.message.reply_text(texto)
+       elif etapa.get("etapa") == "data":
+    try:
+        escolha = int(texto.strip())
+        datas = list(datas_disponiveis.keys())
+        if 1 <= escolha <= len(datas):
+            etapa["data"] = datas[escolha - 1]
+            etapa["etapa"] = "hora"
+            horarios = datas_disponiveis[etapa["data"]]
+            resposta = f"Você escolheu {etapa['data']}.\nEscolha um horário:\n"
+            for i, h in enumerate(horarios):
+                resposta += f"{i+1}. {h}\n"
+            resposta += "Digite o número do horário desejado."
+            await update.message.reply_text(resposta)
             return
+    except:
+        await update.message.reply_text("Digite apenas o número da data desejada.")
+        return
+
 
         elif etapa.get("etapa") == "data":
             try:
