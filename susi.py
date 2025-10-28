@@ -244,9 +244,5 @@ if __name__ == "__main__":
 
     print("Bot está funcionando", flush=True)
 
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 8000)),
-        webhook_url=WEBHOOK_URL
-    )
+   app.run_polling()
 
