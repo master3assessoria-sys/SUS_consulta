@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: susi-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python susi.py
+    envVars:
+      - key: TOKEN
+        sync: false
